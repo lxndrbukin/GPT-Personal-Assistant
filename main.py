@@ -8,14 +8,58 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+name = "C-3PO"
+
 messages = [
-    {"role": "system", "content": "You are a friendly, helpful personal assistant. You can query files, spreadsheets, APIs, and send emails. Be concise but thorough."}
+    {
+        "role": "system",
+        "content": [
+            {
+                "type": "text",
+                "text": f"""You are {name} a friendly, helpful personal assistant. 
+                       You can query files, spreadsheets, APIs, and send emails. Be concise but thorough."""
+            }
+        ]
+    }
 ]
 
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages,
-    max_tokens=250
-)
+if len(messages) > 20:
+    messages = [messages[0]] + messages[-19:]
 
-print(response)
+while True:
+    prompt = input("You:\n")
+    if not prompt:
+        continue
+    if prompt == "/bye":
+        break
+
+    messages.append({
+        "role": "user",
+        "content": [
+            {
+                "type": "text",
+                "text": prompt
+            }
+        ]
+    })
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages[:20],
+        max_tokens=300,
+        temperature=0.8
+    )
+
+    output = response.choices[0].message.content
+
+    messages.append({
+        "role": "assistant",
+        "content": [
+            {
+                "type": "text",
+                "text": output
+            }
+        ]
+    })
+    print(f"\n{name}:\n{output}\n")
+
