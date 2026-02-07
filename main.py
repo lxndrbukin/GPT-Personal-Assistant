@@ -43,14 +43,16 @@ while True:
         ]
     })
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages[:20],
-        max_tokens=300,
-        temperature=0.8
-    )
-
-    output = response.choices[0].message.content
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages[:20],
+            max_tokens=300,
+            temperature=0.8
+        )
+        output = response.choices[0].message.content
+    except Exception as e:
+        output = f"Oops, something went wrong: {e}. Try again?"
 
     messages.append({
         "role": "assistant",
