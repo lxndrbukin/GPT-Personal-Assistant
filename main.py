@@ -1,9 +1,21 @@
 from openai import OpenAI
-client = OpenAI()
+from dotenv import load_dotenv
+import os
 
-response = client.responses.create(
-    model="gpt-5.2",
-    input="Write a short bedtime story about a unicorn."
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+messages = [
+    {"role": "system", "content": "You are a friendly, helpful personal assistant. You can query files, spreadsheets, APIs, and send emails. Be concise but thorough."}
+]
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=messages,
+    max_tokens=250
 )
 
-print(response.output_text)
+print(response)
