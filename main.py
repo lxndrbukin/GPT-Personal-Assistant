@@ -52,12 +52,7 @@ while True:
 
     messages.append({
         "role": "user",
-        "content": [
-            {
-                "type": "text",
-                "text": prompt
-            }
-        ]
+        "content": prompt
     })
 
     try:
@@ -67,7 +62,8 @@ while True:
             tools=tools,
             tool_choice="auto",
             max_tokens=300,
-            temperature=0.8
+            temperature=0.9,
+            stream=False
         )
         choice = response.choices[0]
         if choice.message.tool_calls:
@@ -85,20 +81,23 @@ while True:
                     "name": function_name,
                     "content": str(result)
                 })
-            second_response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                tools=tools,
-                tool_choice="auto"
-            )
-            output = second_response.choices[0].message.content
-        else:
-            output = choice.message.content
+        stream_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            temperature=0.9,
+            stream=True
+        )
+        output = ""
+        print(f"\n{name}:\n", end="", flush=True)
+        for chunk in stream_response:
+            if chunk.choices[0].delta.content is not None:
+                text = chunk.choices[0].delta.content
+                print(text, end="", flush=True)
+                output += text
+        print("\n")
+
     except Exception as e:
         output = f"Oops, something went wrong: {e}. Try again?"
-
-    messages.append({
-        "role": "assistant",
-        "content": output
-    })
-    print(f"\n{name}:\n{output}\n")
+        print(output)
