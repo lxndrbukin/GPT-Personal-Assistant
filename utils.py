@@ -3,8 +3,7 @@ name = "C-3PO"
 messages = [
     {
         "role": "system",
-        "content": f"""You are {name} a friendly, helpful personal assistant. 
-                    You can query files, spreadsheets, APIs, and send emails. Be concise but thorough."""
+        "content": f"You are {name} a friendly, helpful personal assistant. You can query files, spreadsheets, APIs, and send emails. Be concise but thorough."
     }
 ]
 
