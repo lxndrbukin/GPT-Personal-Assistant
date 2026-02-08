@@ -1,4 +1,6 @@
 from weather import get_current_weather
+from history import save_chat_history, load_chat_history
+from utils import name, messages, tools
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -10,35 +12,14 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-name = "C-3PO"
-
-messages = [
-    {
-        "role": "system",
-        "content": f"""You are {name} a friendly, helpful personal assistant. 
-                    You can query files, spreadsheets, APIs, and send emails. Be concise but thorough."""
-    }
-]
-
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_current_weather",
-            "description": "Fetch current weather for a city. Use for ANY weather query.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "city": {
-                        "type": "string",
-                        "description": "City name, e.g., 'Madrid' or 'Barcelona, ES'."
-                    }
-                },
-                "required": []
-            }
-        }
-    }
-]
+try:
+    history = load_chat_history()
+    if history and history[0]["role"] == "system":
+        messages = history
+except FileNotFoundError:
+    pass
+except json.JSONDecodeError:
+    print("Corrupt history file - starting fresh.")
 
 while True:
     if len(messages) > 20:
@@ -67,7 +48,7 @@ while True:
         )
         choice = response.choices[0]
         if choice.message.tool_calls:
-            messages.append(choice.message)
+            messages.append(choice.message.model_dump())
             for tool_call in choice.message.tool_calls:
                 function_name = tool_call.function.name
                 function_args = json.loads(tool_call.function.arguments)
@@ -97,7 +78,12 @@ while True:
                 print(text, end="", flush=True)
                 output += text
         print("\n")
-
+        messages.append({
+            "role": "assistant",
+            "content": output
+        })
     except Exception as e:
         output = f"Oops, something went wrong: {e}. Try again?"
         print(output)
+
+    save_chat_history(messages)
